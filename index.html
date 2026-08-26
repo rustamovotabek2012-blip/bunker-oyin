@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BUNKER — Aktiv Qobiliyatli Maxsus Kartalar</title>
+<title>BUNKER — Bosqichma-bosqich Ovoz Berish</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@600;800&family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -152,10 +152,11 @@
     box-shadow:0 8px 16px -8px rgba(0,0,0,0.6); transition: transform 0.15s ease, border-color 0.15s ease;
   }
   .card:hover { border-color: var(--amber); transform: translateY(-3px); }
-  .card.eliminated{ opacity: 0.35; filter: grayscale(0.8); }
+  .card.eliminated{ opacity: 0.3; filter: grayscale(1); border-color: var(--rust); pointer-events: none; }
   .card .p-num{ font-family:'Big Shoulders Stencil', sans-serif; font-size:28px; color:var(--amber); line-height:1; }
   .card .p-status{ margin-top:4px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--paper-dim); }
   .card.opened .p-status{ color:var(--amber-bright); }
+  .card.eliminated .p-status{ color: var(--rust); font-weight: 700; }
   .card .hint{ font-size:10px; color:var(--paper-dim); margin-top:auto; text-align:right; }
   
   .traits{ display:none; margin-top:10px; border-top:1px dashed var(--line); padding-top:8px; }
@@ -175,8 +176,8 @@
   }
   .win-card .wp-num{ font-family:'Big Shoulders Stencil', sans-serif; font-size:22px; color:var(--amber); }
   .win-card .wp-sub{ font-size:10px; color:var(--paper-dim); margin-top:3px; text-transform:uppercase; }
-  .win-card.picked{ border-color:var(--amber-bright); box-shadow:0 0 0 2px var(--amber-bright); }
-  .win-card.picked::after{ content:'\2713'; position:absolute; top:6px; right:8px; color:var(--amber-bright); font-size:12px; font-weight:700; }
+  .win-card.picked{ border-color:var(--rust); box-shadow:0 0 0 2px var(--rust); background: rgba(168,58,42,0.15); }
+  .win-card.picked::after{ content:'\2715'; position:absolute; top:6px; right:8px; color:var(--rust); font-size:12px; font-weight:700; }
 
   .result-wrap{ text-align:center; }
   .result-eyebrow{ color:var(--amber); font-size:11px; letter-spacing:0.2em; text-transform:uppercase; margin-bottom:8px; }
@@ -198,10 +199,10 @@
 <body>
 
 <header>
-  <div class="eyebrow">Bitta Telefon uchun &middot; Aktiv Qobiliyatli Versiya</div>
+  <div class="eyebrow">Bitta Telefon uchun &middot; Bosqichma-bosqich Ovoz Berish</div>
   <h1 class="title stencil">BUNKER</h1>
   <div class="hazard"></div>
-  <p class="subtitle">Navbatma-navbat telefonni olib dosiyelarni ko'ring, maxsus qobiliyatlarni ishga tushiring!</p>
+  <p class="subtitle">Har bir ovoz berishda tanlangan o'yinchi o'yindan chiqariladi. Oxirida 2 kishi qolsa — o'yin avtomatik yakunlanadi!</p>
 </header>
 
 <div class="wheel-wrap">
@@ -281,7 +282,7 @@
     return a;
   }
 
-  var state = { count:null, players:[], catastrophe:null, crisis:null, supply:null, winners:[], gameLog: [] };
+  var state = { count:null, players:[], catastrophe:null, crisis:null, supply:null, gameLog: [] };
   var app = document.getElementById('app');
   var wheel = document.getElementById('wheel');
   var timerInterval = null;
@@ -326,11 +327,11 @@
   }
 
   function renderRules(){
-    var html = '<div class="panel fade-in"><div class="panel-label">O\'yin Qoidalari & Aktiv Qobiliyatlar</div>';
+    var html = '<div class="panel fade-in"><div class="panel-label">O\'yin Qoidalari</div>';
     html += '<div class="rules-content">';
-    html += '<h3>1. Bitta Telefonda O\'ynash</h3><p>Har bir o\'yinchi navbatma-navbat telefonni olib o\'z dosiyesini ochib ko\'radi va boshqalarga ko\'rsatmasdan yopib qo\'yadi.</p>';
-    html += '<h3>2. Aktiv Maxsus Qobiliyatlar</h3><p>Har bir kartada maxsus qobiliyat bor. O\'yin davomida buni **"Qobiliyatni ishlatish"** tugmasi orqali faollashtirib, boshqa o\'yinchilarni tekshirish yoki kasb almashtirish mumkin!</p>';
-    html += '<h3>3. Maqsad</h3><p>Jamoaviy muhokamada o\'zingizni eng kerakli shaxs sifatida ko\'rsatib, bunkerga kirishga harakat qiling.</p>';
+    html += '<h3>1. Bitta Telefonda O\'ynash</h3><p>Har bir o\'yinchi navbatma-navbat telefonni olib o\'z dosiyesini ochib ko\'radi va yashirincha yopib qo\'yadi.</p>';
+    html += '<h3>2. Ovoz Berib Chiqarish</h3><p>Har bir raund oxirida muhokama qilinib, <b>bitta kishi ovoz berish orqali o\'yindan haydaladi</b> va uning kartasi qorayadi.</p>';
+    html += '<h3>3. O\'yin Tugashi</h3><p>O\'yinda faqat <b>2 ta qatnashchi</b> qolganda o\'yin avtomatik ravishda yakunlanadi!</p>';
     html += '</div>';
     html += '<button class="continue-btn" id="backToSetup">&larr; Orqaga</button></div>';
     app.innerHTML = html;
@@ -371,14 +372,12 @@
 
   function renderBriefing(){
     playBeep(500, 'sine', 0.2);
-    var seats = Math.floor(state.count / 2);
     var html = '<div class="panel fade-in"><div class="stamp">MAXFIY</div>';
     html += '<div class="panel-label">Hisobot va Sharoit</div>';
     html += '<div class="brief-row"><span class="k">Falokat</span><span class="v">'+state.catastrophe.name+'</span></div>';
     html += '<div class="story-box">'+state.catastrophe.story+'</div>';
     html += '<div class="crisis-box"><div class="crisis-title">⚠️ Krizis: '+state.crisis.title+'</div><div>'+state.crisis.desc+'</div></div>';
     html += '<div class="brief-row" style="margin-top:6px;"><span class="k">Zaxira</span><span class="v">'+state.supply+'</span></div>';
-    html += '<div class="brief-row"><span class="k">Bunker joyi</span><span class="v">'+seats+' ta o\'rin</span></div>';
     html += '<button class="continue-btn" id="toCards">Dosiyelarni ko\'rish &rarr;</button></div>';
     app.innerHTML = html;
     document.getElementById('toCards').addEventListener('click', function(){ renderCards(); });
@@ -398,18 +397,24 @@
   }
 
   function renderCards(){
-    var html = '<div class="grid-wrap fade-in"><div class="grid-title oswald"><div>DOSIYELAR &middot; <span class="n">'+state.count+' KISHI</span></div>';
+    var activePlayers = state.players.filter(function(p){ return !p.eliminated; });
+    if(activePlayers.length <= 2){
+      renderEndResult(activePlayers);
+      return;
+    }
+
+    var html = '<div class="grid-wrap fade-in"><div class="grid-title oswald"><div>DOSIYELAR &middot; <span class="n">Tiriklar: '+activePlayers.length+' kishi</span></div>';
     html += '<div class="timer-badge" id="roundTimer">02:00</div></div>';
     
     if(state.gameLog.length > 0){
-      html += '<div class="log-box"><b>📢 Oxirgi harakat:</b> '+state.gameLog[state.gameLog.length-1]+'</div>';
+      html += '<div class="log-box"><b>📢 Oxirgi voqea:</b> '+state.gameLog[state.gameLog.length-1]+'</div>';
     }
 
     html += '<div class="grid">';
     state.players.forEach(function(p){
       html += '<div class="card '+(p.eliminated?'eliminated':'')+'" data-id="'+p.id+'">';
       html += '<div class="p-num"># '+p.id+'</div>';
-      html += '<div class="p-status">'+(p.eliminated ? 'Chiqib ketgan' : (p.opened ? 'Ochilgan' : 'Yopiq'))+'</div>';
+      html += '<div class="p-status">'+(p.eliminated ? '❌ Chiqib ketgan' : (p.opened ? 'Ochilgan' : 'Yopiq'))+'</div>';
       html += '<div class="traits">';
       ORDER.forEach(function(key){
         var cls = '';
@@ -421,15 +426,16 @@
         html += '<button class="action-btn" data-useid="'+p.id+'">Qobiliyatni ishlatish</button>';
       }
       html += '</div>';
-      html += '<div class="hint">ochish &uarr;</div></div>';
+      if(!p.eliminated) html += '<div class="hint">ochish &uarr;</div>';
+      html += '</div>';
     });
     
-    html += '</div><button class="winner-btn" id="winnerBtn" style="margin-top:16px;">Ovoz berish &rarr;</button>';
+    html += '</div><button class="winner-btn" id="voteBtn" style="margin-top:16px;">Ovoz berish (Kimni haydash?) &rarr;</button>';
     html += '<button class="reset-btn" id="resetBtn">&larr; Qaytadan boshlash</button></div>';
     app.innerHTML = html;
     startTimer();
 
-    var allCards = app.querySelectorAll('.card');
+    var allCards = app.querySelectorAll('.card:not(.eliminated)');
     allCards.forEach(function(card){
       card.addEventListener('click', function(e){
         if(e.target.tagName === 'BUTTON') return;
@@ -450,9 +456,9 @@
     });
 
     document.getElementById('resetBtn').addEventListener('click', function(){ renderSetup(); });
-    document.getElementById('winnerBtn').addEventListener('click', function(){
+    document.getElementById('voteBtn').addEventListener('click', function(){
       if(timerInterval) clearInterval(timerInterval);
-      renderWinnerSelect();
+      renderVoteScreen();
     });
   }
 
@@ -464,79 +470,77 @@
     var abilityName = player.specialObj.name;
     
     if(abilityName.includes("Fosh qiluvchi") || abilityName.includes("Imunitet")){
-      // Target someone else or self
       var targetId = prompt("Qaysi o'yinchi raqamini tekshirmoqchisiz/tanlamoqchisiz? (Masalan: 1, 2, 3...)");
       if(!targetId) return;
-      var target = state.players.find(function(p){ return p.id === parseInt(targetId, 10); });
-      if(!target){ alert("Bunday o'yinchi topilmadi!"); return; }
+      var target = state.players.find(function(p){ return p.id === parseInt(targetId, 10) && !p.eliminated; });
+      if(!target){ alert("Bunday tirik o'yinchi topilmadi!"); return; }
       
       if(abilityName.includes("Fosh qiluvchi")){
         alert("Natija (#" + target.id + "): Kasbi — " + target.traits.profession + ", Holati — " + target.traits.secretStatus);
-        state.gameLog.push("#" + player.id + " o'yinchi #" + target.id + " ning sirini fosh qildi!");
+        state.gameLog.push("#" + player.id + " o'yinchi #" + target.id + " ning sirini ochdi!");
       } else {
-        alert("#" + player.id + " uchun Imunitet faollashdi! Keyingi ovoz berishda u himoyalanadi.");
+        alert("#" + player.id + " uchun Imunitet faollashdi!");
         state.gameLog.push("#" + player.id + " o'yinchi imunitet qalqonini ishlatdi!");
       }
     } else {
-      alert("#" + player.id + " ning qobiliyati faollashdi: " + abilityName + " muvaffaqiyatli bajarildi!");
-      state.gameLog.push("#" + player.id + " o'yinchi o'z qobiliyatini ishlatdi.");
+      alert("#" + player.id + " ning qobiliyati faollashdi: " + abilityName);
+      state.gameLog.push("#" + player.id + " qobiliyat ishlatdi.");
     }
     
     player.abilityUsed = true;
     renderCards();
   }
 
-  function renderWinnerSelect(){
-    var picked = [];
-    var seats = Math.floor(state.count / 2);
-    var html = '<div class="panel fade-in" style="max-width:640px;"><div class="panel-label">Ovoz berish: Kim kiradi?</div>';
-    html += '<p style="font-size:12px; color:var(--paper-dim); margin-bottom:10px;">Tanlash kerak: <b>'+seats+' ta</b> kishi</p><div class="win-grid" id="winGrid">';
-    state.players.forEach(function(p){
+  function renderVoteScreen(){
+    var activePlayers = state.players.filter(function(p){ return !p.eliminated; });
+    var selectedId = null;
+
+    var html = '<div class="panel fade-in" style="max-width:640px;"><div class="panel-label">Ovoz berish: Kim o\'yindan chiqadi?</div>';
+    html += '<p style="font-size:12px; color:var(--paper-dim); margin-bottom:10px;">Muhokamadan so\'ng, bu raundda <b>chiqib ketishi kerak bo\'lgan</b> bitta ishtirokchini tanlang:</p>';
+    html += '<div class="win-grid" id="voteGrid">';
+    activePlayers.forEach(function(p){
       html += '<div class="win-card" data-id="'+p.id+'"><div class="wp-num"># '+p.id+'</div><div class="wp-sub">'+p.traits.profession+'</div></div>';
     });
-    html += '</div><button class="winner-btn" id="confirmWinBtn" disabled style="margin-top:16px;">Tasdiqlash</button>';
+    html += '</div><button class="winner-btn" id="confirmVoteBtn" disabled style="margin-top:16px;">O'yindan haydash</button>';
     html += '<button class="reset-btn" id="backToCardsBtn">&larr; Orqaga</button></div>';
     app.innerHTML = html;
 
     var cards = app.querySelectorAll('.win-card');
-    var confirmBtn = document.getElementById('confirmWinBtn');
+    var confirmBtn = document.getElementById('confirmVoteBtn');
     cards.forEach(function(c){
       c.addEventListener('click', function(){
-        var id = parseInt(c.getAttribute('data-id'),10);
-        var idx = picked.indexOf(id);
-        if(idx > -1){ picked.splice(idx,1); c.classList.remove('picked'); }
-        else {
-          if(picked.length >= seats) app.querySelector('.win-card[data-id="'+picked.shift()+'"]').classList.remove('picked');
-          picked.push(id); c.classList.add('picked');
-        }
-        confirmBtn.disabled = (picked.length === 0);
+        cards.forEach(function(x){ x.classList.remove('picked'); });
+        c.classList.add('picked');
+        selectedId = parseInt(c.getAttribute('data-id'), 10);
+        confirmBtn.disabled = false;
       });
     });
 
     confirmBtn.addEventListener('click', function(){
-      state.winners = picked.slice();
-      state.players.forEach(function(p){ if(state.winners.indexOf(p.id) === -1) p.eliminated = true; });
-      renderWinnerResult();
+      if(!selectedId) return;
+      var eliminatedPlayer = state.players.find(function(p){ return p.id === selectedId; });
+      if(eliminatedPlayer){
+        eliminatedPlayer.eliminated = true;
+        state.gameLog.push("#" + eliminatedPlayer.id + " (" + eliminatedPlayer.traits.profession + ") ovoz berish natijasida o'yindan chiqarildi!");
+      }
+      renderCards();
     });
+
     document.getElementById('backToCardsBtn').addEventListener('click', function(){ renderCards(); });
   }
 
-  function renderWinnerResult(){
-    var winners = state.players.filter(function(p){ return state.winners.indexOf(p.id) > -1; });
-    var names = winners.map(function(p){ return '#'+p.id; }).join(', ');
-    var infectedWinner = winners.find(function(p){ return p.isInfected; });
+  function renderEndResult(survivors){
+    var names = survivors.map(function(p){ return '#'+p.id + ' ('+p.traits.profession+')'; }).join(', ');
 
-    var html = '<div class="panel fade-in result-wrap"><div class="stamp">YOPILDI</div>';
-    html += '<div class="result-eyebrow">Bunker O\'rnatildi</div><div class="result-name stencil">G\'oliblar: '+names+'</div>';
-    if(infectedWinner){
-      html += '<div class="crisis-box" style="text-align:left; margin-top:12px;"><div class="crisis-title">⚠️ OGOHLANTIRISH: Virus aniqlandi!</div><div>Bunkerga kirganlar orasida <b>#'+infectedWinner.id+' - o\'yinchi</b> yashirin virus olib yurgan edi!</div></div>';
-    }
-    html += '<button class="continue-btn" id="backToCardsBtn2" style="margin-top:14px;">&larr; Dosiyelarga qaytish</button>';
-    html += '<button class="reset-btn" id="resetBtn2" style="margin-top:8px;">Yangi o\'yin boshlash</button></div>';
+    var html = '<div class="panel fade-in result-wrap"><div class="stamp">YAKUNLANDI</div>';
+    html += '<div class="result-eyebrow">Bunker O\'yini &middot; Yakuniga Yetdi</div>';
+    html += '<div class="result-name stencil">Oxirgi 2 ta ishtirokchi qoldi</div>';
+    html += '<p style="font-size:13px; color:var(--paper-dim); margin-top:8px;">Qolganlar: '+names+'</p>';
+    html += '<div class="story-box" style="text-align:left; margin-top:12px; border-left-color:var(--amber-bright); color:var(--paper);">O\'yinda belgilanganidek oxirida 2 ta odam qoldi va jarayon avtomatik yakunlandi.</div>';
+    html += '<button class="reset-btn" id="resetBtnFinal" style="margin-top:16px;">Yangi o\'yin boshlash</button></div>';
     app.innerHTML = html;
 
-    document.getElementById('backToCardsBtn2').addEventListener('click', function(){ renderCards(); });
-    document.getElementById('resetBtn2').addEventListener('click', function(){ renderSetup(); });
+    document.getElementById('resetBtnFinal').addEventListener('click', function(){ renderSetup(); });
   }
 
   renderSetup();
